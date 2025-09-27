@@ -27,9 +27,11 @@ El objetivo es proporcionar una herramienta sencilla, interactiva y didáctica p
 ├── requirements.txt    # Dependencias del proyecto
 ├── images/             # Recursos estáticos (imágenes, íconos)
 └── README.md           # Documentación del proyecto
+
+---
 ## 📄 Licencia del Proyecto
 
-Este repositorio utiliza la **GNU General Public License v3.0 (GPL v3)**.  
+-Este repositorio utiliza la **GNU General Public License v3.0 (GPL v3)**.  
 A continuación, se compara con la **MIT License**, que también podría ser pertinente para un proyecto de este tipo:
 
 | Aspecto                        | GNU General Public License v3.0 (GPL v3)            | MIT License                                                                 |
