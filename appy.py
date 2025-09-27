@@ -281,7 +281,7 @@ def main():
                 # 2D
                 img2d = mostrar_imagen_2d(smiles_vis)
                 if img2d:
-                    st.image(img2d, caption="Estructura 2D", use_column_width=False)
+                    st.image(img2d, caption="Estructura 2D", use_container_width=False)
 
                 # 3D
                 st.subheader("Vista 3D Interactiva")
