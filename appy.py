@@ -9,8 +9,15 @@ from rdkit import Chem
 from rdkit.Chem import Draw, AllChem
 import py3Dmol
 from PIL import Image
+import warnings
+
+# Evitar warnings de RDKit
+warnings.filterwarnings('ignore')
+
+# ---------------- FUNCIONES ---------------- #
 
 def mostrar_imagen_2d(smiles: str):
+    """Genera imagen 2D de un SMILES"""
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         return None
@@ -18,6 +25,7 @@ def mostrar_imagen_2d(smiles: str):
     return img
 
 def mostrar_imagen_3d(smiles: str):
+    """Genera visualizador 3D con py3Dmol"""
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         return None
@@ -34,28 +42,13 @@ def mostrar_imagen_3d(smiles: str):
     viewer = py3Dmol.view(width=400, height=400)
     viewer.addModel(xyz, "xyz")
     viewer.setStyle({"stick": {}})
+    viewer.setBackgroundColor("white")
     viewer.zoomTo()
+    viewer.render()  # <- Importante
     return viewer
 
-
-# Configuración para evitar warnings de RDKit
-import warnings
-warnings.filterwarnings('ignore')
-
-# Manejo de importación de RDKit
-try:
-    from rdkit import Chem
-    from rdkit.Chem import AllChem
-    RDKIT_AVAILABLE = True
-except ImportError:
-    st.error("❌ RDKit no está instalado. Por favor instala RDKit para usar la funcionalidad de conversión a XYZ.")
-    st.info("Instala con: pip install rdkit")
-    RDKIT_AVAILABLE = False
-
 def detectar_quiralidad(smiles: str):
-    if not RDKIT_AVAILABLE:
-        return False, "RDKit no disponible", []
-    
+    """Detecta si la molécula tiene centros quirales"""
     try:
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
@@ -72,6 +65,7 @@ def detectar_quiralidad(smiles: str):
         return False, f"Error al analizar la molécula: {str(e)}", []
 
 def analizar_centros_existentes(smiles: str):
+    """Cuenta cuántos centros quirales están definidos con @ o @@ en el SMILES"""
     centros_especificados = 0
     posiciones_at = []
     i = 0
@@ -92,6 +86,7 @@ def analizar_centros_existentes(smiles: str):
     return centros_especificados, posiciones_at
 
 def generar_estereoisomeros(smiles: str):
+    """Genera combinaciones de estereoisómeros cambiando @ y @@"""
     posiciones = []
     i = 0
     while i < len(smiles):
@@ -133,9 +128,7 @@ def generar_estereoisomeros(smiles: str):
     return resultados, n
 
 def smiles_to_xyz(smiles, mol_id):
-    if not RDKIT_AVAILABLE:
-        return None, "❌ RDKit no está disponible"
-    
+    """Convierte un SMILES a coordenadas XYZ"""
     try:
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
@@ -174,11 +167,14 @@ def smiles_to_xyz(smiles, mol_id):
         return None, f"❌ Error procesando {smiles}: {str(e)}"
 
 def crear_archivo_zip(archivos_xyz):
+    """Crea un ZIP con los archivos XYZ"""
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         for filename, content in archivos_xyz.items():
             zip_file.writestr(filename, content)
     return zip_buffer.getvalue()
+
+# ---------------- APP PRINCIPAL ---------------- #
 
 def main():
     st.set_page_config(
@@ -206,14 +202,8 @@ def main():
         3. Si tiene centros quirales especificados (@ o @@), genera todos los estereoisómeros
         4. Máximo 3 centros quirales para evitar demasiados isómeros
         5. Opcionalmente convierte a formato XYZ para visualización 3D
-        
-        **Ejemplos de SMILES:**
-        - Sin quiralidad: `CCO`
-        - Molécula quiral: `CC(O)C(N)C`
-        - Con quiralidad: `C[C@H](O)[C@@H](N)C`
-        - Aminoácido: `N[C@@H](C)C(=O)O`
         """)
-    
+
     st.subheader("📝 Entrada de Datos")
     smiles_input = st.text_input(
         "👉 Ingresa el código SMILES:",
@@ -229,57 +219,36 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.info(f"**🔎 Análisis con RDKit:**")
-            if RDKIT_AVAILABLE:
-                if es_quiral:
-                    st.success(f"✅ {mensaje_quiralidad}")
-                    if centros_detectados:
-                        st.write("**Centros detectados:**")
-                        for i, (idx, chirality) in enumerate(centros_detectados):
-                            tipo_quiralidad = str(chirality) if chirality else "Sin asignar"
-                            st.write(f"• Átomo {idx}: {tipo_quiralidad}")
-                else:
-                    if "inválido" in mensaje_quiralidad:
-                        st.error(f"❌ {mensaje_quiralidad}")
-                    else:
-                        st.warning(f"⚠️ {mensaje_quiralidad}")
+            if es_quiral:
+                st.success(f"✅ {mensaje_quiralidad}")
+                if centros_detectados:
+                    st.write("**Centros detectados:**")
+                    for i, (idx, chirality) in enumerate(centros_detectados):
+                        tipo_quiralidad = str(chirality) if chirality else "Sin asignar"
+                        st.write(f"• Átomo {idx}: {tipo_quiralidad}")
             else:
-                st.warning("⚠️ RDKit no disponible para análisis")
+                st.warning(mensaje_quiralidad)
         
         with col2:
-            st.info(f"**📋 Centros especificados en SMILES:**")
             if centros_especificados > 0:
                 st.success(f"✅ {centros_especificados} centros con @ o @@ especificados")
-                for pos in posiciones_at:
-                    st.write(f"• Posición {pos}")
             else:
                 st.warning("⚠️ No hay centros especificados con @ o @@")
         
-        if RDKIT_AVAILABLE and es_quiral and centros_especificados == 0:
-            st.info("""
-            💡 Tu molécula es quiral pero no tiene centros especificados con @ o @@.
-            Ejemplo: `CC(O)C(N)C` → `C[C@H](O)[C@@H](N)C`
-            """)
-        
-        # Siempre inicializar
+        # Tabs
+        tab1, tab2, tab3, tab4 = st.tabs(["📋 Lista", "💾 Descargar SMI", "🧪 Convertir a XYZ", "🖼️ Visualizar Molécula"])
+
+        # Generación de estereoisómeros
         isomeros, n_centros = [], 0
         if centros_especificados > 0:
             with st.spinner("🔄 Generando estereoisómeros..."):
                 isomeros, n_centros = generar_estereoisomeros(smiles_input)
-        
-        # Crear tabs aunque no haya isómeros
-        tab1, tab2, tab3, tab4 =st.tabs(["📋 Lista", "💾 Descargar SMI", "🧪 Convertir a XYZ", "🖼️ Visualizar Molécula"])
 
-        
         if isomeros:
             with tab1:
-                col1, col2 = st.columns(2)
-                for i, isomero in enumerate(isomeros):
-                    if i % 2 == 0:
-                        col1.code(f"{i+1}. {isomero}")
-                    else:
-                        col2.code(f"{i+1}. {isomero}")
-            
+                for i, isomero in enumerate(isomeros, 1):
+                    st.code(f"{i}. {isomero}")
+
             with tab2:
                 smi_content = "\n".join(isomeros)
                 st.download_button(
@@ -288,40 +257,14 @@ def main():
                     file_name="estereoisomeros.smi",
                     mime="text/plain"
                 )
-                with st.expander("👀 Vista previa del archivo SMI"):
-                    st.text(smi_content)
-            
+
             with tab3:
                 if st.button("🚀 Convertir todos a XYZ", type="primary"):
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
                     archivos_xyz = {}
-                    mensajes_log = []
-                    
-                    for i, smiles in enumerate(isomeros):
-                        try:
-                            progress = (i + 1) / len(isomeros)
-                            progress_bar.progress(progress)
-                            status_text.text(f"Procesando molécula {i+1}/{len(isomeros)}: {smiles}")
-                            
-                            xyz_content, mensaje = smiles_to_xyz(smiles, i+1)
-                            mensajes_log.append(mensaje)
-                            
-                            if xyz_content:
-                                archivos_xyz[f"mol_{i+1}.xyz"] = xyz_content
-                        except Exception as e:
-                            mensajes_log.append(f"❌ Error procesando molécula {i+1}: {str(e)}")
-                    
-                    progress_bar.progress(1.0)
-                    status_text.text("✅ Proceso completado!")
-                    
-                    with st.expander("📋 Log de procesamiento"):
-                        for mensaje in mensajes_log:
-                            if "❌" in mensaje or "⚠️" in mensaje:
-                                st.error(mensaje)
-                            else:
-                                st.success(mensaje)
-                    
+                    for i, smiles in enumerate(isomeros, 1):
+                        xyz_content, mensaje = smiles_to_xyz(smiles, i)
+                        if xyz_content:
+                            archivos_xyz[f"mol_{i}.xyz"] = xyz_content
                     if archivos_xyz:
                         zip_data = crear_archivo_zip(archivos_xyz)
                         st.download_button(
@@ -330,31 +273,29 @@ def main():
                             file_name="estereoisomeros_xyz.zip",
                             mime="application/zip"
                         )
-                        with st.expander("👀 Vista previa del primer archivo XYZ"):
-                            primer_archivo = list(archivos_xyz.values())[0]
-                            st.code(primer_archivo)
-        else:
-            st.info("💡 Ingresa un SMILES con centros quirales especificados (@ o @@) para generar estereoisómeros")
-            with tab4:  # la cuarta pestaña
-                st.header("🖼️ Visualizador de Moléculas")
-                smiles_vis = st.text_input("Introduce un código SMILES para visualizar")
-                if smiles_vis:
-                        # Mostrar 2D
-                    img2d = mostrar_imagen_2d(smiles_vis)
-                    if img2d:
-                        st.image(img2d, caption="Estructura 2D", use_column_width=False)
 
-                    # Mostrar 3D
-                    st.subheader("Vista 3D Interactiva")
-                    viewer = mostrar_imagen_3d(smiles_vis)
-                    if viewer:
-                        st.components.v1.html(viewer._make_html(), height=450, width=450)
+        with tab4:
+            st.header("🖼️ Visualizador de Moléculas")
+            smiles_vis = st.text_input("Introduce un código SMILES para visualizar")
+            if smiles_vis:
+                # 2D
+                img2d = mostrar_imagen_2d(smiles_vis)
+                if img2d:
+                    st.image(img2d, caption="Estructura 2D", use_column_width=False)
+
+                # 3D
+                st.subheader("Vista 3D Interactiva")
+                viewer = mostrar_imagen_3d(smiles_vis)
+                if viewer:
+                    st.components.v1.html(viewer._make_html(), height=500, width=500)
+                else:
+                    st.warning("⚠️ No se pudo generar la vista 3D para este SMILES")
 
     st.markdown("---")
     st.markdown(
         """
         <div style='text-align: center'>
-            <small>🧬 <strong>Inchiral</strong> - Universidad Científica del Sur<br>
+            <small>🧬 <strong>Inchiral</strong><br>
             Generador de Estereoisómeros | Desarrollado con Streamlit y RDKit</small>
         </div>
         """,
