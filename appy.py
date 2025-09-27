@@ -334,20 +334,21 @@ def main():
                             st.code(primer_archivo)
         else:
             st.info("💡 Ingresa un SMILES con centros quirales especificados (@ o @@) para generar estereoisómeros")
-    with tab4:  # la cuarta pestaña
-    st.header("🖼️ Visualizador de Moléculas")
-    smiles_vis = st.text_input("Introduce un código SMILES para visualizar")
-    if smiles_vis:
-        # Mostrar 2D
-        img2d = mostrar_imagen_2d(smiles_vis)
-        if img2d:
-            st.image(img2d, caption="Estructura 2D", use_column_width=False)
+            with tab4:  # la cuarta pestaña
+                st.header("🖼️ Visualizador de Moléculas")
+                smiles_vis = st.text_input("Introduce un código SMILES para visualizar")
+                if smiles_vis:
+                        # Mostrar 2D
+                    img2d = mostrar_imagen_2d(smiles_vis)
+                    if img2d:
+                        st.image(img2d, caption="Estructura 2D", use_column_width=False)
 
-        # Mostrar 3D
-        st.subheader("Vista 3D Interactiva")
-        viewer = mostrar_imagen_3d(smiles_vis)
-        if viewer:
-            st.components.v1.html(viewer.js(), height=450)
+                    # Mostrar 3D
+                    st.subheader("Vista 3D Interactiva")
+                    viewer = mostrar_imagen_3d(smiles_vis)
+                    if viewer:
+                        st.components.v1.html(viewer.js(), height=450)
+
     st.markdown("---")
     st.markdown(
         """
