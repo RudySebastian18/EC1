@@ -26,16 +26,17 @@ def mostrar_imagen_3d(smiles: str):
     AllChem.UFFOptimizeMolecule(mol)
 
     conf = mol.GetConformer()
-    xyz = ""
+    xyz = f"{mol.GetNumAtoms()}\n\n"
     for atom in mol.GetAtoms():
         pos = conf.GetAtomPosition(atom.GetIdx())
-        xyz += f"{atom.GetSymbol()} {pos.x} {pos.y} {pos.z}\n"
+        xyz += f"{atom.GetSymbol()} {pos.x:.4f} {pos.y:.4f} {pos.z:.4f}\n"
 
     viewer = py3Dmol.view(width=400, height=400)
     viewer.addModel(xyz, "xyz")
     viewer.setStyle({"stick": {}})
     viewer.zoomTo()
     return viewer
+
 
 # Configuración para evitar warnings de RDKit
 import warnings
@@ -347,7 +348,7 @@ def main():
                     st.subheader("Vista 3D Interactiva")
                     viewer = mostrar_imagen_3d(smiles_vis)
                     if viewer:
-                        st.components.v1.html(viewer.js(), height=450)
+                        st.components.v1.html(viewer._make_html(), height=450, width=450)
 
     st.markdown("---")
     st.markdown(
