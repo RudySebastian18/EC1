@@ -5,6 +5,37 @@ import zipfile
 import tempfile
 import io
 import sys
+from rdkit import Chem
+from rdkit.Chem import Draw, AllChem
+import py3Dmol
+from PIL import Image
+
+def mostrar_imagen_2d(smiles: str):
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    img = Draw.MolToImage(mol, size=(300, 300))
+    return img
+
+def mostrar_imagen_3d(smiles: str):
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    mol = Chem.AddHs(mol)
+    AllChem.EmbedMolecule(mol, AllChem.ETKDGv3())
+    AllChem.UFFOptimizeMolecule(mol)
+
+    conf = mol.GetConformer()
+    xyz = ""
+    for atom in mol.GetAtoms():
+        pos = conf.GetAtomPosition(atom.GetIdx())
+        xyz += f"{atom.GetSymbol()} {pos.x} {pos.y} {pos.z}\n"
+
+    viewer = py3Dmol.view(width=400, height=400)
+    viewer.addModel(xyz, "xyz")
+    viewer.setStyle({"stick": {}})
+    viewer.zoomTo()
+    return viewer
 
 # Configuración para evitar warnings de RDKit
 import warnings
@@ -236,7 +267,8 @@ def main():
                 isomeros, n_centros = generar_estereoisomeros(smiles_input)
         
         # Crear tabs aunque no haya isómeros
-        tab1, tab2, tab3 = st.tabs(["📋 Lista Completa", "💾 Descargar SMI", "🧪 Convertir a XYZ"])
+        tab1, tab2, tab3, tab4 =st.tabs(["📋 Lista", "💾 Descargar SMI", "🧪 Convertir a XYZ", "🖼️ Visualizar Molécula"])
+
         
         if isomeros:
             with tab1:
@@ -302,7 +334,20 @@ def main():
                             st.code(primer_archivo)
         else:
             st.info("💡 Ingresa un SMILES con centros quirales especificados (@ o @@) para generar estereoisómeros")
-    
+    with tab4:  # la cuarta pestaña
+    st.header("🖼️ Visualizador de Moléculas")
+    smiles_vis = st.text_input("Introduce un código SMILES para visualizar")
+    if smiles_vis:
+        # Mostrar 2D
+        img2d = mostrar_imagen_2d(smiles_vis)
+        if img2d:
+            st.image(img2d, caption="Estructura 2D", use_column_width=False)
+
+        # Mostrar 3D
+        st.subheader("Vista 3D Interactiva")
+        viewer = mostrar_imagen_3d(smiles_vis)
+        if viewer:
+            st.components.v1.html(viewer.js(), height=450)
     st.markdown("---")
     st.markdown(
         """
