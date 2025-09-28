@@ -1,32 +1,35 @@
-# 🧬 Estereoisomería en Moléculas - Análisis con Streamlit y RDKit  
+# 🧬 Inchiral - Generador de Estereoisómeros
 
-Este proyecto es una aplicación web construida con **Streamlit** que permite:  
-
-1. ✅ Detectar si una molécula (dada en formato **SMILES**) presenta **estereoisomería**.  
-2. 🔄 Generar **todos los estereoisómeros posibles** en código **SMILES**.  
-3. 📂 Exportar las moléculas en formato **XYZ** para obtener las coordenadas cartesianas de sus átomos.  
-
-El objetivo es proporcionar una herramienta sencilla, interactiva y didáctica para **química computacional** y **química orgánica**.  
+Este proyecto permite **analizar códigos SMILES** para detectar quiralidad, generar todos los estereoisómeros posibles (máximo 3 centros quirales) y exportarlos en formato **SMI** o **XYZ**.  
+Además, incluye la opción de visualizar las moléculas en **2D y 3D** de forma interactiva.
 
 ---
 
-## 🚀 Características  
-
-- 📌 **Entrada de moléculas** mediante cadenas SMILES.  
-- 🔍 **Detección de estereocentros** y evaluación de estereoisomería.  
-- 🧬 **Enumeración automática de estereoisómeros** usando RDKit.  
-- 📦 **Exportación a formato `.xyz`**, listo para usarse en programas de química computacional.  
-- 🌐 Interfaz web desarrollada con **Streamlit** para fácil interacción.  
+## 🚀 Funcionalidades principales
+- Detección de centros quirales en moléculas.
+- Generación automática de estereoisómeros a partir de SMILES.
+- Exportación de resultados en:
+  - 📄 `.smi` (lista de isómeros)
+  - 📦 `.xyz` (conformaciones 3D en ZIP)
+- Visualización molecular en:
+  - 🖼️ 2D (estructura plana)
+  - 🔬 3D (vista interactiva con py3Dmol)
 
 ---
 
-## 📂 Estructura del Repositorio  
+## ⚙️ Tecnologías usadas
+- [Streamlit](https://streamlit.io/) → Interfaz web interactiva.
+- [RDKit](https://www.rdkit.org/) → Procesamiento químico y generación de conformaciones 3D.
+- [py3Dmol](https://pypi.org/project/py3Dmol/) → Visualización molecular en 3D.
+- [Pillow (PIL)](https://pillow.readthedocs.io/en/stable/) → Manejo de imágenes.
+
+---
+
+## 📦 Instalación
+Clona este repositorio y asegúrate de tener instaladas las dependencias:
 
 ```bash
-├── app.py              # Aplicación principal de Streamlit
-├── requirements.txt    # Dependencias del proyecto
-├── images/             # Recursos estáticos (imágenes, íconos)
-└── README.md           # Documentación del proyecto
+pip install streamlit rdkit-pypi py3Dmol pillow
 
 ---
 ## 📄 Licencia del Proyecto
